@@ -7,9 +7,11 @@ from nltk.tokenize import word_tokenize
 
 from flask import Flask
 from flask import render_template, request, jsonify
-from plotly.graph_objs import Bar
+from plotly.graph_objs import Bar, Pie
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 
 app = Flask(__name__)
@@ -26,11 +28,21 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///data/DisasterResponse.db')
+df = pd.read_sql_table('my_table', con=engine)
+
+category_names = ['related', 'request',
+           'offer', 'aid_related', 'medical_help', 'medical_products',
+           'search_and_rescue', 'security', 'military', 'child_alone', 'water',
+           'food', 'shelter', 'clothing', 'money', 'missing_people', 'refugees',
+           'death', 'other_aid', 'infrastructure_related', 'transport',
+           'buildings', 'electricity', 'tools', 'hospitals', 'shops',
+           'aid_centers', 'other_infrastructure', 'weather_related', 'floods',
+           'storm', 'fire', 'earthquake', 'cold', 'other_weather',
+           'direct_report']
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -39,30 +51,67 @@ model = joblib.load("../models/your_model_name.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    # message related to disaster or not
+    related_messages = df['related'].value_counts()
+    related_messages_labels = ['related messages', 'not related messages']
+    
+    # category counts
+    category_counts = df[category_names].sum()
+    category_counts = category_counts.sort_values(ascending=False)
+    
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
-            'data': [
-                Bar(
-                    x=genre_names,
-                    y=genre_counts
-                )
-            ],
-
-            'layout': {
-                'title': 'Distribution of Message Genres',
-                'yaxis': {
-                    'title': "Count"
-                },
-                'xaxis': {
-                    'title': "Genre"
-                }
-            }
+            'data' : [
+                Pie(labels=genre_names,
+                    values=genre_counts,
+                    textinfo='percent',
+                    )
+                ],
+            'layout' : {
+                'title' : 'Message Source',
+                'titlefont' : {
+                            'size' : '22'
+                            }
+                    }
+        },
+        {
+            'data' : [
+                Pie(labels=related_messages_labels,
+                    values=related_messages,
+                    textinfo='percent',
+                    )
+                ],
+            'layout' : {
+                'title' : 'Message Relevance',
+                'titlefont' : {
+                            'size' : '22'
+                            }
+                    }
+        },
+        {
+        'data' : [
+                Bar(x=category_names,
+                    y=category_counts)
+                ],
+            'layout' : {
+                'title' : 'categories of messages',
+                'titlefont' : {
+                            'size' : '22'
+                            },
+                'xaxis' : {
+                        'title' : 'category',
+                        'tickfont' : {
+                                    'size' : '8'
+                                    }
+                        },
+                'yaxis' : {
+                        'title' : 'count'
+                        }
+                    }
         }
     ]
     
