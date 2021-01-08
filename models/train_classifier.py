@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 import numpy as np
 import re
-import cloudpickle
+import pickle
 from sqlalchemy import create_engine
 import nltk
 from nltk.tokenize import word_tokenize
@@ -16,7 +16,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
 
 # download stopwords
 nltk.download('punkt')
@@ -98,8 +98,7 @@ def build_model():
     
     # create pipeline
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize)),
-        ('tfidf', TfidfTransformer(smooth_idf=False)),
+        ('tfidf', TfidfVectorizer(tokenizer=tokenize, smooth_idf=False)),
         ('clf', MultiOutputClassifier(RandomForestClassifier()))
     ])
     
@@ -108,12 +107,12 @@ def build_model():
     # define parameters for grid search
     parameters = {
         'clf__estimator__n_estimators': [50, 100, 200],
-        'clf__estimator__max_depth': [1, 5, 10],
-        'clf__estimator__max_features': [*np.arange(0.1, 1.1, 0.1)]
+        'clf__estimator__max_depth': [1, 10, 20],
+        'clf__estimator__max_features': ['auto', 'sqrt'],
     }   
     
     # compute grid search
-    cv = GridSearchCV(pipeline, param_grid=parameters, n_jobs=-1,verbose=1, cv=3)
+    cv = GridSearchCV(pipeline, param_grid=parameters, n_jobs=-1,verbose=3, cv=3)
 
     return cv
       
@@ -155,7 +154,7 @@ def save_model(model, model_filepath):
     '''
     
     # save model to pickle
-    cloudpickle.dump(model, open(model_filepath, 'wb'))
+    pickle.dump(model, open(model_filepath, 'wb'))
     
 def main():
     if len(sys.argv) == 3:
