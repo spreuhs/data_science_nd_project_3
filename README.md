@@ -1,14 +1,42 @@
 # Disaster Response Pipeline Project
 
-### Instructions:
-1. Run the following commands in the project's root directory to set up your database and model.
+## Table of Contents
+[Installation](https://github.com/spreuhs/data_science_nd_project_3/blob/main/README.md#installation)
 
-    - To run ETL pipeline that cleans data and stores in database
-        `python data/process_data.py data/disaster_messages.csv data/disaster_categories.csv data/DisasterResponse.db`
-    - To run ML pipeline that trains classifier and saves
-        `python models/train_classifier.py data/DisasterResponse.db models/classifier.pkl`
+[Running Instructions](https://github.com/spreuhs/data_science_nd_project_3/blob/main/README.md#running-instructions)
 
-2. Run the following command in the app's directory to run your web app.
-    `python run.py`
+[Project Summary](https://github.com/spreuhs/data_science_nd_project_3/blob/main/README.md#project-summary)
 
-3. Go to http://0.0.0.0:3001/
+[Repository Structure](https://github.com/spreuhs/data_science_nd_project_3/blob/main/README.md#repository-structure)
+
+[Acknowledgements](https://github.com/spreuhs/data_science_nd_project_3/blob/main/README.md#acknowledgements)
+
+## Installation
+
+There should be no necessary libraries to run the code beyond the Anaconda distribution of Python. The code should run without issues using Python versions 3.*.
+
+## Running Instructions
+- To run ETL pipeline that cleans data and stores in database
+    `python data/process_data.py data/disaster_messages.csv data/disaster_categories.csv data/DisasterResponse.db`
+- To run ML pipeline that trains classifier and saves
+     `python models/train_classifier.py data/DisasterResponse.db models/classifier.pkl`
+- To run the web app.
+    `python apps/run.py`
+
+You can then enter the flask app on [http://0.0.0.0:3001/](http://0.0.0:3001/)
+
+## Project Summary
+
+tbd
+
+
+## Repository Structure
+
+- data/ contains everything required for data preperation, including the data as .csv, a python script for the preperation and the final database
+- models/ contains the the python script for model creation and the final classifier
+- app/ contains files for the web data creation
+
+
+## Acknowledgements
+
+Thanks to Figure Eight for their data on Twitter messages.
