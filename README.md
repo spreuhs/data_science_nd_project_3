@@ -27,7 +27,9 @@ You can then enter the flask app on [http://0.0.0.0:3001/](http://0.0.0:3001/)
 
 ## Project Summary
 
-tbd
+Social Media is one important source for information about potential disasters. The huge amount of users leads to fast and detailed information as people tend to heavily use Social Media in case of major events. Unfortunately the result is a incredibly large number of messages which is hard to interpret and is impossible to scan by hand.
+
+Therefore this projects categorizes given Twitter messages using machine learning in order to potentially support disaster responses in the future.
 
 
 ## Repository Structure
