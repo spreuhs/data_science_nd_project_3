@@ -4,13 +4,13 @@ import sys
 import pandas as pd
 import numpy as np
 import re
-import pickle
+import cloudpickle
 from sqlalchemy import create_engine
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import classification_report
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
@@ -19,8 +19,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 # download stopwords
+nltk.download('punkt')
 nltk.download('stopwords')
+nltk.download('wordnet')
 
+stop_words = stopwords.words('english')
 
 def load_data(database_filepath):
     '''
@@ -39,7 +42,7 @@ def load_data(database_filepath):
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     
     # load data from database
-    df = pd.read_sql_table(database_filepath, con=engine)
+    df = pd.read_sql_table('my_table', con=engine)
     
     # Split into feature and label
     category_names = ['related', 'request',
@@ -59,7 +62,13 @@ def load_data(database_filepath):
 
 def tokenize(text):
     '''
-    comment
+    normalize, clean and tokenize text
+    
+    Args:
+        text: input text for tokenization
+    
+    Return:
+        lemmed: cleaned tokens
     '''
     
     # normalize
@@ -69,7 +78,7 @@ def tokenize(text):
     tokens = word_tokenize(text)
     
     # remove stopwords
-    tokens = [w for w in tokens if w not in stopwords.words("english")]
+    tokens = [w for w in tokens if w not in stop_words]
     
     # lemmatize
     lemmed = [WordNetLemmatizer().lemmatize(w) for w in tokens]
@@ -78,7 +87,13 @@ def tokenize(text):
     
 def build_model():
     '''
-    comment
+    builds and returns the classifier
+    
+    Args:
+        None
+        
+    Return:
+        cv: classifier
     '''
     
     # create pipeline
@@ -93,12 +108,12 @@ def build_model():
     # define parameters for grid search
     parameters = {
         'clf__estimator__n_estimators': [50, 100, 200],
-        'clf__estimator__max_depth': [1, 5, 10, 25],
+        'clf__estimator__max_depth': [1, 5, 10],
         'clf__estimator__max_features': [*np.arange(0.1, 1.1, 0.1)]
     }   
     
     # compute grid search
-    cv = GridSearchCV(pipeline, param_grid=parameters)
+    cv = GridSearchCV(pipeline, param_grid=parameters, n_jobs=-1,verbose=1, cv=3)
 
     return cv
       
@@ -106,46 +121,42 @@ def build_model():
 
 def evaluate_model(model, X_test, Y_test, category_names):
     '''
-    comment
+    evaluates model and creates console output
+    
+    Args:
+        model: trained model
+        X_test: test split of X
+        Y_test: test split of Y
+        category_names: list containing category names
+    
+    Return:
+        None
     '''
     
     # predict test values
     y_pred = model.predict(X_test)
     
     # calculate f1-score, precision and recall
-    fscore = []
-    precision = []
-    recall = []
-    
-    print('results by category:')
-    print('')
-    
-    for i in range(y_true.shape[1]):
-        prec, rec, f1 = precision_recall_fscore_support(y_true, y_pred, average='macro')
-        fscore.append(f1)
-        precision.append(prec)
-        recall.append(rec)
-        
-        print('category: ', category_names[i])
-        print('f_score: ', f1)
-        print('precision: ', prec)
-        print('recall: ', rec)
-        print('')
-    
-    print('final results:')
-    print('the mean f1 score is: {}'.format(pd.Series(fscore).mean()))
-    print('the mean precision is: {}'.format(pd.Series(precision).mean()))
-    print('the mean recall is: {}'.format(pd.Series(recall).mean()))
+    for i in range(Y_test.shape[1]):
+        result = classification_report(Y_test.iloc[:,i], y_pred[:,i])
+        print("Report on", category_names[i], ":")
+        print(result)
 
 def save_model(model, model_filepath):
     '''
-    comment
+    saves the model als pkl
+    
+    Args:
+        model: model to be saved
+        model_filepath: location and filename
+        
+    Return:
+        None        
     '''
     
     # save model to pickle
-    pkl.dump(model, open(model_filepath, 'wb'))
-
-
+    cloudpickle.dump(model, open(model_filepath, 'wb'))
+    
 def main():
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
