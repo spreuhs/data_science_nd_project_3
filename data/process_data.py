@@ -37,13 +37,8 @@ def clean_data(df):
     # create a dataframe of the 36 individual category columns
     categories = df.categories.str.split(';',expand=True)
     
-    # select the first row of the categories dataframe
-    row = categories.loc[0,:]
-    
-    # use this row to extract a list of new column names for categories.
-    # one way is to apply a lambda function that takes everything 
-    # up to the second to last character of each string with slicing
-    category_colnames = [item[0] for item in row.str.split('-')]
+    #get colnames
+    category_colnames = categories.iloc[0].str.split('-').str[0]
     
     # rename the columns of `categories`
     categories.columns = category_colnames
@@ -62,6 +57,9 @@ def clean_data(df):
 	
     # drop duplicates
     df = df.drop_duplicates()
+    
+    # replace values of 2 in related to binary values
+    df.related.replace(2, 1, inplace=True)
     
     return df
 
